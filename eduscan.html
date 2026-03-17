@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EduScan — Smart Campus Learning Card System</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0c10;
+    --bg2: #111318;
+    --bg3: #181c23;
+    --card: #13161e;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.12);
+    --text: #eef0f4;
+    --muted: #7a8196;
+    --accent: #4f8ef7;
+    --accent2: #7c5cfc;
+    --green: #3ecf8e;
+    --amber: #f5a623;
+    --red: #f25f5c;
+    --teal: #38c9c9;
+    --glow: rgba(79,142,247,0.15);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* SCAN PAGE */
+  #scan-page {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .bg-grid {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(79,142,247,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(79,142,247,0.04) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none;
+  }
+
+  .bg-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    pointer-events: none;
+  }
+  .orb1 { width: 400px; height: 400px; background: rgba(79,142,247,0.12); top: -100px; right: -100px; }
+  .orb2 { width: 300px; height: 300px; background: rgba(124,92,252,0.1); bottom: -80px; left: -80px; }
+
+  .scan-logo {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 3rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .scan-logo-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 12px var(--accent);
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%,100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(0.85); }
+  }
+
+  .scan-card-wrapper {
+    position: relative;
+    z-index: 1;
+    margin-bottom: 2.5rem;
+  }
+
+  .scan-card {
+    width: 340px;
+    border-radius: 20px;
+    background: linear-gradient(135deg, #1b2d52 0%, #2a4a8a 50%, #1a3060 100%);
+    padding: 24px;
+    border: 1px solid rgba(79,142,247,0.3);
+    box-shadow: 0 0 60px rgba(79,142,247,0.15), 0 20px 40px rgba(0,0,0,0.4);
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .scan-card:hover {
+    transform: translateY(-4px) scale(1.01);
+    box-shadow: 0 0 80px rgba(79,142,247,0.25), 0 24px 48px rgba(0,0,0,0.5);
+  }
+
+  .scan-card::before {
+    content: '';
+    position: absolute;
+    top: -40px; right: -40px;
+    width: 160px; height: 160px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.05);
+  }
+
+  .scan-card::after {
+    content: '';
+    position: absolute;
+    bottom: -30px; left: 60px;
+    width: 100px; height: 100px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.03);
+  }
+
+  .card-chip {
+    width: 36px; height: 28px;
+    background: linear-gradient(135deg, #d4a843, #f0cb6e);
+    border-radius: 5px;
+    margin-bottom: 20px;
+    position: relative;
+  }
+
+  .card-chip::before {
+    content: '';
+    position: absolute;
+    inset: 4px;
+    border: 1px solid rgba(0,0,0,0.15);
+    border-radius: 3px;
+  }
+
+  .card-school {
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.5);
+    margin-bottom: 4px;
+    font-family: 'Syne', sans-serif;
+  }
+
+  .card-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 2px;
+  }
+
+  .card-grade {
+    font-size: 12px;
+    color: rgba(255,255,255,0.6);
+    margin-bottom: 20px;
+  }
+
+  .card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+
+  .card-id-label { font-size: 9px; color: rgba(255,255,255,0.4); letter-spacing: 0.1em; text-transform: uppercase; }
+  .card-id { font-family: 'Syne', sans-serif; font-size: 13px; color: rgba(255,255,255,0.8); letter-spacing: 0.05em; }
+
+  .card-qr {
+    width: 44px; height: 44px;
+    background: rgba(255,255,255,0.9);
+    border-radius: 4px;
+    display: grid;
+    grid-template-columns: repeat(5,1fr);
+    gap: 1.5px;
+    padding: 4px;
+  }
+
+  .qr-pixel { border-radius: 0.5px; }
+
+  .scan-hint {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 1.5rem;
+    position: relative;
+    z-index: 1;
+    text-align: center;
+  }
+
+  .scan-btn {
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 14px 40px;
+    border-radius: 100px;
+    border: none;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #fff;
+    cursor: pointer;
+    position: relative;
+    z-index: 1;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 8px 30px rgba(79,142,247,0.3);
+  }
+
+  .scan-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(79,142,247,0.4); }
+  .scan-btn:active { transform: scale(0.97); }
+
+  #scan-status-text {
+    font-size: 13px;
+    color: var(--accent);
+    margin-top: 1rem;
+    height: 20px;
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    font-weight: 500;
+  }
+
+  /* SCANNING ANIMATION */
+  .scan-laser {
+    position: absolute;
+    left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    top: 0;
+    animation: laser 1.5s linear 3;
+    display: none;
+    box-shadow: 0 0 12px var(--accent);
+  }
+
+  @keyframes laser {
+    0% { top: 0; }
+    100% { top: 100%; }
+  }
+
+  /* DASHBOARD PAGE */
+  #dashboard-page {
+    display: none;
+    min-height: 100vh;
+    background: var(--bg);
+  }
+
+  /* TOPBAR */
+  .topbar {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(12px);
+  }
+
+  .topbar-logo {
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .topbar-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 10px var(--green);
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  .topbar-right { display: flex; align-items: center; gap: 14px; }
+
+  .topbar-scan-btn {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 7px 16px;
+    border-radius: 100px;
+    border: 1px solid var(--border2);
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .topbar-scan-btn:hover { background: var(--border); color: var(--text); }
+
+  .topbar-time {
+    font-size: 12px;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* HERO STRIP */
+  .hero-strip {
+    background: linear-gradient(135deg, #0f1d3a 0%, #151b30 60%, #0f1220 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 2.5rem 2rem 2rem;
+    position: relative;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(12px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+  }
+
+  .hero-strip.visible { opacity: 1; transform: translateY(0); }
+
+  .hero-strip::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 80% 50%, rgba(79,142,247,0.1) 0%, transparent 60%);
+  }
+
+  .hero-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    position: relative;
+  }
+
+  .student-avatar {
+    width: 72px; height: 72px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Syne', sans-serif;
+    font-size: 24px;
+    font-weight: 800;
+    color: #fff;
+    flex-shrink: 0;
+    box-shadow: 0 0 0 4px rgba(79,142,247,0.2), 0 8px 24px rgba(0,0,0,0.3);
+  }
+
+  .hero-info { flex: 1; }
+  .hero-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--text);
+    margin-bottom: 3px;
+  }
+  .hero-meta { font-size: 13px; color: var(--muted); display: flex; gap: 16px; flex-wrap: wrap; }
+  .hero-meta span { display: flex; align-items: center; gap: 5px; }
+
+  .hero-score {
+    text-align: right;
+    flex-shrink: 0;
+  }
+  .score-ring-wrap { position: relative; width: 80px; height: 80px; }
+  .score-number {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Syne', sans-serif;
+  }
+  .score-big { font-size: 22px; font-weight: 800; color: var(--text); line-height: 1; }
+  .score-pct { font-size: 10px; color: var(--muted); }
+
+  .score-delta {
+    font-size: 11px;
+    color: var(--green);
+    margin-top: 4px;
+    text-align: center;
+  }
+
+  /* MAIN CONTENT */
+  .main-content {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 2rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: auto;
+    gap: 16px;
+  }
+
+  /* CARDS */
+  .dash-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity 0.4s ease, transform 0.4s ease, border-color 0.2s;
+  }
+
+  .dash-card:hover { border-color: var(--border2); }
+  .dash-card.visible { opacity: 1; transform: translateY(0); }
+
+  .dash-card.span2 { grid-column: span 2; }
+  .dash-card.span3 { grid-column: span 3; }
+
+  .card-label {
+    font-family: 'Syne', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+
+  /* STAT ROWS */
+  .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .stat-item { text-align: center; }
+  .stat-val {
+    font-family: 'Syne', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .stat-lbl { font-size: 11px; color: var(--muted); }
+
+  /* SUBJECT BARS */
+  .subject-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  .subject-row:last-child { margin-bottom: 0; }
+  .subj-name { font-size: 13px; width: 90px; flex-shrink: 0; }
+  .bar-track { flex: 1; height: 6px; background: rgba(255,255,255,0.06); border-radius: 99px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 99px; width: 0; transition: width 1s cubic-bezier(0.4,0,0.2,1); }
+  .subj-pct { font-size: 12px; color: var(--muted); width: 34px; text-align: right; flex-shrink: 0; font-variant-numeric: tabular-nums; }
+  .subj-badge { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 99px; flex-shrink: 0; }
+
+  /* ACTIVITY LIST */
+  .activity-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .activity-item:last-child { border-bottom: none; padding-bottom: 0; }
+
+  .act-icon-wrap {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+
+  .act-title { font-size: 13px; font-weight: 500; margin-bottom: 2px; }
+  .act-desc { font-size: 12px; color: var(--muted); }
+  .act-tag { font-size: 10px; font-weight: 600; padding: 3px 10px; border-radius: 99px; margin-left: auto; flex-shrink: 0; }
+
+  /* TEACHER ALERT */
+  .alert-card {
+    border-color: rgba(245,166,35,0.25) !important;
+    background: linear-gradient(135deg, rgba(245,166,35,0.05) 0%, var(--card) 100%) !important;
+  }
+
+  .alert-row { display: flex; gap: 12px; align-items: flex-start; }
+  .alert-avatar {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    background: rgba(245,166,35,0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--amber);
+    flex-shrink: 0;
+  }
+
+  .alert-name { font-size: 13px; font-weight: 500; margin-bottom: 3px; }
+  .alert-msg { font-size: 12px; color: var(--muted); line-height: 1.6; }
+  .alert-label { font-size: 10px; font-weight: 600; color: var(--amber); background: rgba(245,166,35,0.12); padding: 2px 8px; border-radius: 99px; display: inline-block; margin-bottom: 4px; }
+
+  /* RECENT ACTIVITY */
+  .timeline-item {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    padding-bottom: 16px;
+    position: relative;
+  }
+  .timeline-item:not(:last-child)::before {
+    content: '';
+    position: absolute;
+    left: 14px;
+    top: 30px;
+    bottom: 0;
+    width: 1px;
+    background: var(--border);
+  }
+  .tl-dot {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+  }
+  .tl-label { font-size: 13px; font-weight: 500; }
+  .tl-sub { font-size: 12px; color: var(--muted); }
+  .tl-time { font-size: 11px; color: var(--muted); margin-left: auto; flex-shrink: 0; }
+
+  /* MINI CARD */
+  .mini-id-card {
+    background: linear-gradient(135deg, #1b2d52 0%, #2a4a8a 100%);
+    border-radius: 12px;
+    padding: 16px;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(79,142,247,0.2);
+  }
+  .mini-id-card::before {
+    content: '';
+    position: absolute; top: -20px; right: -20px;
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.05);
+  }
+  .mini-id-name { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 2px; }
+  .mini-id-info { font-size: 11px; color: rgba(255,255,255,0.55); }
+  .mini-id-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 14px; }
+  .mini-id-num { font-family: 'Syne', sans-serif; font-size: 12px; color: rgba(255,255,255,0.7); letter-spacing: 0.05em; }
+
+  /* SCAN OVERLAY */
+  #scan-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.8);
+    backdrop-filter: blur(6px);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+  }
+  #scan-overlay.show { display: flex; }
+
+  .overlay-box {
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: 24px;
+    padding: 2.5rem;
+    width: 340px;
+    text-align: center;
+  }
+
+  .overlay-title { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 800; margin-bottom: 6px; }
+  .overlay-sub { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
+
+  /* RESPONSIVE */
+  @media (max-width: 800px) {
+    .main-content { grid-template-columns: 1fr; }
+    .dash-card.span2, .dash-card.span3 { grid-column: span 1; }
+    .stat-grid { grid-template-columns: repeat(2,1fr); }
+    .hero-score { display: none; }
+  }
+
+  /* ANIMATIONS */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .page-transition {
+    animation: fadeUp 0.5s ease forwards;
+  }
+</style>
+</head>
+<body>
+
+<!-- ─── SCAN PAGE ─────────────────────────── -->
+<div id="scan-page">
+  <div class="bg-grid"></div>
+  <div class="bg-orb orb1"></div>
+  <div class="bg-orb orb2"></div>
+
+  <div class="scan-logo">
+    <div class="scan-logo-dot"></div>
+    EduScan
+  </div>
+
+  <div class="scan-card-wrapper">
+    <div class="scan-card" onclick="startScan()">
+      <div class="scan-laser" id="scan-laser"></div>
+      <div class="card-chip"></div>
+      <div class="card-school">Mindanao State University — IIT</div>
+      <div class="card-name">Maria Santos</div>
+      <div class="card-grade">Grade 10 · Section Rizal · AY 2025–2026</div>
+      <div class="card-footer">
+        <div>
+          <div class="card-id-label">Student ID</div>
+          <div class="card-id">MSU-2026-04821</div>
+        </div>
+        <div class="card-qr" id="qr-block">
+          <!-- QR pixels generated by JS -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="scan-hint">Click the card or press the button below to scan</p>
+  <button class="scan-btn" onclick="startScan()">Scan Card</button>
+  <div id="scan-status-text"></div>
+</div>
+
+<!-- ─── DASHBOARD PAGE ─────────────────────── -->
+<div id="dashboard-page">
+
+  <nav class="topbar">
+    <div class="topbar-logo">
+      <div class="topbar-dot"></div>
+      EduScan
+    </div>
+    <div class="topbar-right">
+      <div class="topbar-time" id="live-time"></div>
+      <button class="topbar-scan-btn" onclick="goBack()">← Back to Scan</button>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <div class="hero-strip" id="hero-strip">
+    <div class="hero-inner">
+      <div class="student-avatar">MS</div>
+      <div class="hero-info">
+        <div class="hero-name">Maria Santos</div>
+        <div class="hero-meta">
+          <span>🎓 Grade 10 — Section Rizal</span>
+          <span>🏫 MSU-IIT Campus</span>
+          <span>🪪 MSU-2026-04821</span>
+          <span>📅 AY 2025–2026</span>
+        </div>
+      </div>
+      <div class="hero-score">
+        <div class="score-ring-wrap">
+          <svg width="80" height="80" viewBox="0 0 80 80">
+            <circle cx="40" cy="40" r="32" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="6"/>
+            <circle cx="40" cy="40" r="32" fill="none" stroke="url(#scoreGrad)" stroke-width="6"
+              stroke-dasharray="201" stroke-dashoffset="36" stroke-linecap="round"
+              transform="rotate(-90 40 40)"/>
+            <defs>
+              <linearGradient id="scoreGrad" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stop-color="#4f8ef7"/>
+                <stop offset="100%" stop-color="#7c5cfc"/>
+              </linearGradient>
+            </defs>
+          </svg>
+          <div class="score-number">
+            <div class="score-big">84</div>
+            <div class="score-pct">overall</div>
+          </div>
+        </div>
+        <div class="score-delta">↑ +3% this week</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN GRID -->
+  <div class="main-content">
+
+    <!-- STAT CARDS -->
+    <div class="dash-card span3" id="card-stats">
+      <div class="card-label">Quick Stats</div>
+      <div class="stat-grid">
+        <div class="stat-item">
+          <div class="stat-val" style="color: var(--green);">18</div>
+          <div class="stat-lbl">Lessons Completed</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-val" style="color: var(--muted);">6</div>
+          <div class="stat-lbl">Remaining</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-val" style="color: var(--amber);">2</div>
+          <div class="stat-lbl">Topics Flagged</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-val" style="color: var(--accent);">4</div>
+          <div class="stat-lbl">Subjects Tracked</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SUBJECT PROGRESS -->
+    <div class="dash-card span2" id="card-subjects">
+      <div class="card-label">Subject Progress</div>
+      <div class="subject-row">
+        <div class="subj-name" style="font-size:13px;">Mathematics</div>
+        <div class="bar-track"><div class="bar-fill" data-pct="91" style="background:var(--green);"></div></div>
+        <div class="subj-pct">91%</div>
+        <div class="subj-badge" style="background:rgba(62,207,142,0.12);color:var(--green);">Strong</div>
+      </div>
+      <div class="subject-row">
+        <div class="subj-name" style="font-size:13px;">Science</div>
+        <div class="bar-track"><div class="bar-fill" data-pct="62" style="background:var(--amber);"></div></div>
+        <div class="subj-pct">62%</div>
+        <div class="subj-badge" style="background:rgba(245,166,35,0.12);color:var(--amber);">Review</div>
+      </div>
+      <div class="subject-row">
+        <div class="subj-name" style="font-size:13px;">Filipino</div>
+        <div class="bar-track"><div class="bar-fill" data-pct="78" style="background:var(--accent);"></div></div>
+        <div class="subj-pct">78%</div>
+        <div class="subj-badge" style="background:rgba(79,142,247,0.12);color:var(--accent);">Good</div>
+      </div>
+      <div class="subject-row">
+        <div class="subj-name" style="font-size:13px;">English</div>
+        <div class="bar-track"><div class="bar-fill" data-pct="88" style="background:var(--teal);"></div></div>
+        <div class="subj-pct">88%</div>
+        <div class="subj-badge" style="background:rgba(56,201,201,0.12);color:var(--teal);">Strong</div>
+      </div>
+    </div>
+
+    <!-- ID CARD MINI -->
+    <div class="dash-card" id="card-id">
+      <div class="card-label">Student Card</div>
+      <div class="mini-id-card">
+        <div style="font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.4);margin-bottom:8px;">MSU — IIT</div>
+        <div class="mini-id-name">Maria Santos</div>
+        <div class="mini-id-info">Grade 10 · Section Rizal</div>
+        <div class="mini-id-info" style="margin-top:2px;">AY 2025–2026</div>
+        <div class="mini-id-footer">
+          <div class="mini-id-num">MSU-2026-04821</div>
+          <div style="width:36px;height:36px;background:rgba(255,255,255,0.9);border-radius:3px;display:grid;grid-template-columns:repeat(5,1fr);gap:1px;padding:3px;" id="mini-qr"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TODAY'S RECOMMENDATIONS -->
+    <div class="dash-card span2" id="card-recs">
+      <div class="card-label">Today's Recommendations</div>
+      <div class="activity-item">
+        <div class="act-icon-wrap" style="background:rgba(245,166,35,0.12);">📋</div>
+        <div style="flex:1;">
+          <div class="act-title">Review: Cell Division (Science)</div>
+          <div class="act-desc">Quiz score was below 70% — 5-min flashcard set ready for you</div>
+        </div>
+        <div class="act-tag" style="background:rgba(245,166,35,0.12);color:var(--amber);">Priority</div>
+      </div>
+      <div class="activity-item">
+        <div class="act-icon-wrap" style="background:rgba(79,142,247,0.12);">📝</div>
+        <div style="flex:1;">
+          <div class="act-title">Practice: Quadratic Equations</div>
+          <div class="act-desc">3 practice problems to strengthen mastery — estimated 10 mins</div>
+        </div>
+        <div class="act-tag" style="background:rgba(79,142,247,0.12);color:var(--accent);">Optional</div>
+      </div>
+      <div class="activity-item">
+        <div class="act-icon-wrap" style="background:rgba(62,207,142,0.12);">🏆</div>
+        <div style="flex:1;">
+          <div class="act-title">English — Peer Tutoring Available</div>
+          <div class="act-desc">Your strongest subject! A classmate needs help this week</div>
+        </div>
+        <div class="act-tag" style="background:rgba(62,207,142,0.12);color:var(--green);">Strength</div>
+      </div>
+    </div>
+
+    <!-- TEACHER ALERT -->
+    <div class="dash-card alert-card" id="card-alert">
+      <div class="card-label">Teacher Alert</div>
+      <div class="alert-row">
+        <div class="alert-avatar">JR</div>
+        <div>
+          <div class="alert-label">Flagged by Teacher</div>
+          <div class="alert-name">Mr. Reyes — Science</div>
+          <div class="alert-msg">Maria may need extra support on Chapter 4 topics before the next unit test on March 20.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RECENT ACTIVITY -->
+    <div class="dash-card span2" id="card-timeline">
+      <div class="card-label">Recent Activity</div>
+      <div class="timeline-item">
+        <div class="tl-dot" style="background:rgba(62,207,142,0.15);color:var(--green);">✓</div>
+        <div style="flex:1;">
+          <div class="tl-label">Completed: English — Reading Comprehension</div>
+          <div class="tl-sub">Score: 92/100</div>
+        </div>
+        <div class="tl-time">Today, 8:30am</div>
+      </div>
+      <div class="timeline-item">
+        <div class="tl-dot" style="background:rgba(245,166,35,0.15);color:var(--amber);">!</div>
+        <div style="flex:1;">
+          <div class="tl-label">Quiz: Science — Cell Division</div>
+          <div class="tl-sub">Score: 64/100 · Needs review</div>
+        </div>
+        <div class="tl-time">Yesterday</div>
+      </div>
+      <div class="timeline-item">
+        <div class="tl-dot" style="background:rgba(79,142,247,0.15);color:var(--accent);">◎</div>
+        <div style="flex:1;">
+          <div class="tl-label">Completed: Math — Linear Equations</div>
+          <div class="tl-sub">Score: 89/100</div>
+        </div>
+        <div class="tl-time">Mar 10</div>
+      </div>
+      <div class="timeline-item">
+        <div class="tl-dot" style="background:rgba(56,201,201,0.15);color:var(--teal);">★</div>
+        <div style="flex:1;">
+          <div class="tl-label">Filipino — Oral Recitation</div>
+          <div class="tl-sub">Excellent participation noted by teacher</div>
+        </div>
+        <div class="tl-time">Mar 8</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- SCAN OVERLAY (optional second scan) -->
+<div id="scan-overlay">
+  <div class="overlay-box">
+    <div class="overlay-title">Scan Another Card</div>
+    <div class="overlay-sub">Hold the card near the reader</div>
+    <button class="scan-btn" onclick="closeScanOverlay()" style="width:100%;">Done</button>
+  </div>
+</div>
+
+<script>
+  // ── QR Pattern Generator ──────────────────
+  function buildQR(el, size) {
+    const pat = [
+      1,1,1,1,1, 0,1,1,0,1,1,0,0,1,1,1,1,1,
+      1,0,0,0,1, 0,0,1,0,0,1,0,1,0,1,0,0,0,1,
+      1,0,1,0,1, 1,0,0,1,0,0,1,0,0,1,0,1,0,1,
+      1,1,1,1,1, 1,1,0,0,1,1,1,0,1,1,1,1,1,1,
+      0,0,0,0,0, 1,1,1,0,1,0,0,1,0,0,0,0,0,0,
+    ];
+    el.innerHTML = '';
+    el.style.gridTemplateColumns = `repeat(${size},1fr)`;
+    pat.slice(0, size * size).forEach(v => {
+      const d = document.createElement('div');
+      d.className = 'qr-pixel';
+      d.style.background = v ? '#1a3a5c' : '#fff';
+      el.appendChild(d);
+    });
+  }
+
+  buildQR(document.getElementById('qr-block'), 5);
+
+  // ── Live Clock ───────────────────────────
+  function updateClock() {
+    const t = new Date();
+    document.getElementById('live-time').textContent =
+      t.toLocaleTimeString('en-PH', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+  }
+  setInterval(updateClock, 1000);
+  updateClock();
+
+  // ── Scan Logic ───────────────────────────
+  function startScan() {
+    const laser = document.getElementById('scan-laser');
+    const status = document.getElementById('scan-status-text');
+    laser.style.display = 'block';
+    status.textContent = 'Scanning card…';
+    setTimeout(() => {
+      status.textContent = 'Verifying identity…';
+    }, 600);
+    setTimeout(() => {
+      status.textContent = 'Card recognized — Maria Santos ✓';
+    }, 1300);
+    setTimeout(() => {
+      showDashboard();
+    }, 2000);
+  }
+
+  function showDashboard() {
+    document.getElementById('scan-page').style.display = 'none';
+    const dp = document.getElementById('dashboard-page');
+    dp.style.display = 'block';
+
+    // Build mini QR
+    buildQR(document.getElementById('mini-qr'), 5);
+
+    // Animate hero strip
+    setTimeout(() => {
+      document.getElementById('hero-strip').classList.add('visible');
+    }, 100);
+
+    // Staggered card reveals
+    const cards = ['card-stats','card-subjects','card-id','card-recs','card-alert','card-timeline'];
+    cards.forEach((id, i) => {
+      setTimeout(() => {
+        const el = document.getElementById(id);
+        if (el) el.classList.add('visible');
+      }, 300 + i * 120);
+    });
+
+    // Animate progress bars
+    setTimeout(() => {
+      document.querySelectorAll('.bar-fill').forEach(bar => {
+        bar.style.width = bar.dataset.pct + '%';
+      });
+    }, 600);
+  }
+
+  function goBack() {
+    document.getElementById('dashboard-page').style.display = 'none';
+    document.getElementById('scan-page').style.display = 'flex';
+    document.getElementById('scan-status-text').textContent = '';
+    document.getElementById('scan-laser').style.display = 'none';
+    // reset cards
+    document.querySelectorAll('.dash-card').forEach(c => c.classList.remove('visible'));
+    document.getElementById('hero-strip').classList.remove('visible');
+    document.querySelectorAll('.bar-fill').forEach(b => b.style.width = '0');
+  }
+
+  function closeScanOverlay() {
+    document.getElementById('scan-overlay').classList.remove('show');
+  }
+</script>
+</body>
+</html>
